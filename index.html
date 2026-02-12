@@ -3,402 +3,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aether OS | Genesis</title>
+    <title>Aether | Ascendance</title>
     
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Aether OS","short_name":"Aether","start_url":".","display":"standalone","background_color":"#050507","theme_color":"#d4af37"}'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Aether OS","short_name":"Aether","start_url":".","display":"standalone","background_color":"#050508","theme_color":"#d4af37"}'>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --primary: #d4af37; /* Gold */
-            --accent: #10b981; /* Default Emerald */
-            --bg: #050507;
-            --surface: #121217;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.4);
+            --bg: #050508;
+            --card: #111116;
             --text: #ffffff;
-            --text-muted: #888891;
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
+            --text-dim: #888;
+            --emerald: #10b981;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             margin: 0; padding: 0;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
+            overflow: hidden; /* Фикс скролла всего экрана */
         }
 
-        /* --- BACKGROUND ENGINE --- */
-        #dynamic-bg {
+        /* --- ФОН --- */
+        .bg-gradient {
             position: fixed; inset: 0; z-index: -1;
-            background: radial-gradient(circle at top right, var(--accent), transparent 60%),
-                        radial-gradient(circle at bottom left, #1e1e2e, transparent 50%);
-            opacity: 0.15;
-            transition: all 1s ease;
+            background: radial-gradient(circle at 50% -20%, #1a1a2e, transparent 70%);
         }
 
-        /* --- LAYOUT --- */
-        .app-container {
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ (Safe Area Fix) --- */
+        header {
+            padding: calc(var(--safe-top) + 10px) 25px 15px;
+            background: rgba(5, 5, 8, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .user-status {
+            display: flex; justify-content: space-between; align-items: flex-end;
+        }
+
+        .rank-label { 
+            font-family: 'Cinzel', serif; color: var(--gold); 
+            font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+        }
+
+        .lvl-container {
+            width: 100%; height: 4px; background: rgba(255,255,255,0.05);
+            margin-top: 10px; border-radius: 2px; overflow: hidden;
+        }
+        .lvl-bar { height: 100%; background: var(--gold); box-shadow: 0 0 10px var(--gold); transition: 1s ease; }
+
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        main {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 100px);
             overflow-y: auto;
+            padding: 20px 20px 120px; /* Запас снизу для навигации */
         }
 
-        .view { display: none; animation: slideUp 0.4s ease forwards; }
+        .view { display: none; animation: fadeIn 0.4s ease forwards; }
         .view.active { display: block; }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        /* --- HEADER --- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        .header h1 { font-family: 'Playfair Display', serif; margin: 0; font-size: 1.8rem; }
-        .energy-badge {
-            background: var(--glass);
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            font-weight: 700;
-            color: var(--primary);
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        /* --- HABIT CARDS (HOME) --- */
+        /* --- КАРТОЧКИ ПРИВЫЧЕК --- */
         .habit-card {
-            background: var(--surface);
-            border: 1px solid var(--glass-border);
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 24px;
             padding: 20px;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: 0.3s;
+            display: flex; align-items: center; gap: 15px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .habit-card.completed { border-color: var(--primary); background: rgba(212, 175, 55, 0.05); }
-        
-        .check-circle {
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            border: 2px solid var(--glass-border);
+
+        .habit-card.done {
+            border-color: var(--gold-glow);
+            background: linear-gradient(145deg, #111116, #1a1a15);
+        }
+
+        .check-btn {
+            width: 56px; height: 56px; border-radius: 18px;
+            border: 2px solid rgba(255,255,255,0.1);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; transition: 0.3s;
-            cursor: pointer;
+            font-size: 1.4rem; transition: 0.3s;
         }
-        .completed .check-circle { background: var(--primary); border-color: var(--primary); color: var(--bg); }
+
+        .done .check-btn {
+            background: var(--gold); color: #000; border-color: var(--gold);
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
 
         .habit-info { flex: 1; }
-        .habit-info h3 { margin: 0; font-size: 1.1rem; }
-        .habit-info p { margin: 5px 0 0; font-size: 0.8rem; color: var(--text-muted); }
-
-        /* --- ANALYTICS (STATS) --- */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .stat-item {
-            background: var(--glass);
-            padding: 20px;
-            border-radius: 20px;
-            text-align: center;
+        .habit-info h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .streak-tag {
+            font-size: 0.7rem; color: var(--gold); margin-top: 5px;
+            display: flex; align-items: center; gap: 5px; font-weight: 800;
         }
-        .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--primary); display: block; }
-        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
 
-        /* Карта активности */
-        .heatmap {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            background: var(--surface);
-            padding: 15px;
-            border-radius: 20px;
+        /* --- ДОСТИЖЕНИЯ --- */
+        .awards-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
         }
-        .heat-cell { aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 4px; }
-        .heat-cell.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
 
-        /* --- GARDEN (VISUAL PROGRESS) --- */
-        .garden-scene {
-            height: 300px;
-            background: var(--surface);
-            border-radius: 30px;
-            position: relative;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 20px;
-            overflow: hidden;
-            border: 1px solid var(--glass-border);
+        .award-box {
+            background: var(--card); border-radius: 24px; padding: 20px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; opacity: 0.4; filter: grayscale(1);
+            transition: 0.5s;
         }
-        .plant-container { display: flex; gap: 20px; align-items: flex-end; }
-        .plant { transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* --- THEME PICKER (PROFILE) --- */
-        .theme-grid { display: flex; gap: 15px; margin-top: 15px; }
-        .theme-dot {
-            width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; cursor: pointer;
-        }
-        .theme-dot.active { border-color: #fff; transform: scale(1.1); }
+        .award-box.unlocked { opacity: 1; filter: grayscale(0); border-color: var(--gold); }
+        .award-box i { font-size: 2.5rem; color: var(--gold); margin-bottom: 10px; }
+        .award-box h4 { margin: 0; font-size: 0.8rem; }
+        .award-box p { font-size: 0.6rem; color: var(--text-dim); margin: 5px 0 0; }
 
-        /* --- NAV BAR --- */
-        .nav-bar {
-            position: fixed;
-            bottom: calc(var(--safe-bottom) + 15px);
-            left: 20px; right: 20px;
-            height: 75px;
-            background: rgba(18, 18, 23, 0.9);
+        /* --- НАВИГАЦИЯ (Safe Area Fix) --- */
+        nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(var(--safe-bottom) + 70px);
+            background: rgba(10, 10, 15, 0.9);
             backdrop-filter: blur(20px);
-            border-radius: 25px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border: 1px solid var(--glass-border);
-            z-index: 1000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-around; align-items: flex-start;
+            padding-top: 15px; z-index: 1000;
         }
+
         .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--text-muted); font-size: 0.65rem; gap: 5px; transition: 0.3s;
-            cursor: pointer; width: 60px;
-        }
-        .nav-item i { font-size: 1.4rem; }
-        .nav-item.active { color: var(--primary); }
-
-        .add-btn {
-            width: 60px; height: 60px;
-            background: var(--primary);
-            border-radius: 50%;
-            margin-top: -50px;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--bg); font-size: 1.5rem;
-            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+            color: var(--text-dim); text-align: center; transition: 0.3s;
+            flex: 1; cursor: pointer;
         }
 
-        /* --- MODAL --- */
+        .nav-item.active { color: var(--gold); }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+        .nav-item span { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; }
+
+        .fab {
+            width: 64px; height: 64px; background: var(--gold);
+            border-radius: 50%; color: #000; display: flex; align-items: center;
+            justify-content: center; font-size: 1.8rem; margin-top: -45px;
+            box-shadow: 0 10px 25px var(--gold-glow);
+        }
+
+        /* --- МОДАЛЬНОЕ ОКНО --- */
         .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            display: none; align-items: center; justify-content: center; z-index: 2000;
-            padding: 20px; backdrop-filter: blur(10px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+            padding: 20px; backdrop-filter: blur(15px);
         }
-        .modal-content {
-            background: var(--surface);
-            padding: 30px; border-radius: 30px; width: 100%; max-width: 400px;
-            border: 1px solid var(--glass-border);
+        .modal-body {
+            background: var(--card); width: 100%; max-width: 400px;
+            padding: 40px 30px; border-radius: 40px; border: 1px solid var(--gold);
         }
         input {
-            width: 100%; background: var(--bg); border: 1px solid var(--glass-border);
-            color: #fff; padding: 15px; border-radius: 15px; margin: 20px 0;
-            font-size: 1rem; font-family: inherit;
+            width: 100%; background: transparent; border: none;
+            border-bottom: 2px solid var(--gold); color: #fff;
+            font-size: 1.4rem; padding: 15px 0; text-align: center;
+            outline: none; margin-bottom: 30px;
         }
-        .btn {
-            width: 100%; padding: 15px; border-radius: 15px; border: none;
-            font-weight: 700; cursor: pointer; font-family: inherit;
+        .btn-main {
+            width: 100%; padding: 18px; border-radius: 20px; border: none;
+            background: var(--gold); color: #000; font-weight: 800; font-size: 1rem;
         }
-        .btn-primary { background: var(--primary); color: var(--bg); }
     </style>
 </head>
 <body>
 
-    <div id="dynamic-bg"></div>
+    <div class="bg-gradient"></div>
 
-    <div class="app-container">
-        
-        <header class="header">
+    <header>
+        <div class="user-status">
             <div>
-                <p id="greeting" style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Приветствую,</p>
-                <h1 id="view-title">Сегодня</h1>
+                <span class="rank-label" id="rank-name">Initiate</span>
+                <h2 style="margin: 0; font-size: 1.4rem;">Уровень <span id="lvl-val">1</span></h2>
             </div>
-            <div class="energy-badge">
-                <i class="fa-solid fa-bolt"></i> <span id="energy-pct">0%</span>
+            <div style="text-align: right;">
+                <span style="font-size: 0.7rem; color: var(--text-dim);">Всего XP</span>
+                <div style="font-weight: 800; color: var(--gold);" id="xp-val">0</div>
             </div>
-        </header>
+        </div>
+        <div class="lvl-container">
+            <div class="lvl-bar" id="lvl-bar" style="width: 0%"></div>
+        </div>
+    </header>
 
+    <main id="scroll-area">
+        
         <section id="view-home" class="view active">
-            <div id="habit-list">
+            <div id="habit-list"></div>
+            <div id="empty-state" style="text-align: center; margin-top: 60px; display: none;">
+                <i class="fa-solid fa-moon" style="font-size: 3rem; color: #222;"></i>
+                <p style="color: var(--text-dim); margin-top: 15px;">Ваша история еще не написана.<br>Добавьте первый вызов.</p>
+            </div>
+        </section>
+
+        <section id="view-awards" class="view">
+            <h3 style="font-family: 'Cinzel'; margin-bottom: 25px;">Зал Триумфов</h3>
+            <div class="awards-grid">
+                <div class="award-box" id="award-1">
+                    <i class="fa-solid fa-seedling"></i>
+                    <h4>Первый Росток</h4>
+                    <p>Добавьте 1 привычку</p>
                 </div>
-            <div id="empty-msg" style="text-align: center; margin-top: 40px; color: var(--text-muted); display: none;">
-                <i class="fa-solid fa-seedling" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.2;"></i>
-                <p>Ваше поле пусто.<br>Посадите первую привычку.</p>
+                <div class="award-box" id="award-2">
+                    <i class="fa-solid fa-fire-flame-curved"></i>
+                    <h4>В Ритме</h4>
+                    <p>Серия из 3-х дней</p>
+                </div>
+                <div class="award-box" id="award-3">
+                    <i class="fa-solid fa-gem"></i>
+                    <h4>Мастерство</h4>
+                    <p>Серия из 7-ми дней</p>
+                </div>
+                <div class="award-box" id="award-4">
+                    <i class="fa-solid fa-crown"></i>
+                    <h4>Архитектор</h4>
+                    <p>100 выполненных целей</p>
+                </div>
             </div>
         </section>
 
         <section id="view-stats" class="view">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-num" id="stat-total">0</span>
-                    <span class="stat-label">Всего выполнено</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-num" id="stat-streak">0</span>
-                    <span class="stat-label">Лучшая серия</span>
-                </div>
+            <div class="habit-card" style="display: block; text-align: center;">
+                <span style="color: var(--gold); font-size: 2rem; font-weight: 800;" id="stat-total-done">0</span>
+                <p style="margin: 5px 0 0; font-size: 0.8rem; color: var(--text-dim);">Всего побед</p>
             </div>
-            <h3 style="margin-bottom: 15px;">Активность за неделю</h3>
-            <div class="heatmap" id="heatmap">
-                </div>
-        </section>
+            </section>
 
-        <section id="view-garden" class="view">
-            <div class="garden-scene" id="garden-scene">
-                <div class="plant-container" id="plant-container">
-                    </div>
-            </div>
-            <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">
-                Каждое выполнение привычки растит ваше растение. <br>Не дайте им завянуть.
-            </p>
-        </section>
+    </main>
 
-        <section id="view-profile" class="view">
-            <div class="stat-item" style="text-align: left; margin-bottom: 20px;">
-                <h3 style="margin: 0;">Персонализация</h3>
-                <p style="color: var(--text-muted); font-size: 0.8rem;">Выберите свой цвет энергии</p>
-                <div class="theme-grid">
-                    <div class="theme-dot active" style="background: #d4af37;" onclick="setTheme('#d4af37', this)"></div>
-                    <div class="theme-dot" style="background: #10b981;" onclick="setTheme('#10b981', this)"></div>
-                    <div class="theme-dot" style="background: #3b82f6;" onclick="setTheme('#3b82f6', this)"></div>
-                    <div class="theme-dot" style="background: #a855f7;" onclick="setTheme('#a855f7', this)"></div>
-                </div>
-            </div>
-            <button class="btn" style="background: var(--glass); color: #fff;" onclick="resetAll()">Сбросить прогресс</button>
-        </section>
-
-    </div>
-
-    <nav class="nav-bar">
+    <nav>
         <div class="nav-item active" onclick="switchView('home', this)">
-            <i class="fa-solid fa-calendar-day"></i>
-            <span>Сегодня</span>
+            <i class="fa-solid fa-ghost"></i>
+            <span>Путь</span>
         </div>
-        <div class="nav-item" onclick="switchView('stats', this)">
-            <i class="fa-solid fa-chart-line"></i>
-            <span>Анализ</span>
+        <div class="nav-item" onclick="switchView('awards', this)">
+            <i class="fa-solid fa-trophy"></i>
+            <span>Триумф</span>
         </div>
-        <div class="add-btn" onclick="toggleModal(true)">
+        <div class="fab" onclick="toggleModal(true)">
             <i class="fa-solid fa-plus"></i>
         </div>
-        <div class="nav-item" onclick="switchView('garden', this)">
-            <i class="fa-solid fa-leaf"></i>
-            <span>Сад</span>
+        <div class="nav-item" onclick="switchView('stats', this)">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Сила</span>
         </div>
-        <div class="nav-item" onclick="switchView('profile', this)">
-            <i class="fa-solid fa-user-gear"></i>
-            <span>Профиль</span>
+        <div class="nav-item" onclick="location.reload()">
+            <i class="fa-solid fa-sync"></i>
+            <span>Обновить</span>
         </div>
     </nav>
 
     <div class="modal" id="modal">
-        <div class="modal-content">
-            <h2 style="margin: 0; font-family: 'Playfair Display', serif;">Новая привычка</h2>
-            <p style="color: var(--text-muted); font-size: 0.8rem;">Что мы будем развивать сегодня?</p>
-            <input type="text" id="habit-input" placeholder="Напр: Утренняя йога" autofocus>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" style="background: transparent; color: #888;" onclick="toggleModal(false)">Отмена</button>
-                <button class="btn btn-primary" onclick="addHabit()">Создать</button>
-            </div>
+        <div class="modal-body">
+            <h3 style="font-family: 'Cinzel'; text-align: center; margin: 0 0 10px;">Новый Вызов</h3>
+            <input type="text" id="habit-input" placeholder="Название цели..." autocomplete="off">
+            <button class="btn-main" onclick="addHabit()">Начать Восхождение</button>
+            <button style="background: none; border: none; color: #555; width: 100%; margin-top: 20px;" onclick="toggleModal(false)">Отмена</button>
         </div>
     </div>
 
     <script>
-        // --- STATE ---
-        let state = JSON.parse(localStorage.getItem('aether_v3')) || {
+        // --- DATA ---
+        let state = JSON.parse(localStorage.getItem('aether_asc_v1')) || {
             habits: [],
-            theme: '#d4af37',
-            history: {} // Format: { "2023-10-27": count }
+            xp: 0,
+            level: 1,
+            totalDone: 0
         };
 
+        const ranks = ["Initiate", "Seeker", "Adept", "Master", "Legend", "Eternal"];
+
         // --- INIT ---
-        document.addEventListener('DOMContentLoaded', () => {
-            applyTheme(state.theme);
+        function init() {
             renderHabits();
-            renderHeatmap();
-            updateEnergy();
-            updateGreeting();
-        });
-
-        function save() {
-            localStorage.setItem('aether_v3', JSON.stringify(state));
+            updateUI();
+            checkAwards();
         }
 
-        // --- NAVIGATION ---
-        function switchView(viewId, el) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
-            
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            if(el) el.classList.add('active');
-
-            const titles = { home: 'Сегодня', stats: 'Аналитика', garden: 'Мой Сад', profile: 'Настройки' };
-            document.getElementById('view-title').innerText = titles[viewId];
-
-            if(viewId === 'garden') renderGarden();
-        }
-
-        function toggleModal(show) {
-            const m = document.getElementById('modal');
-            m.style.display = show ? 'flex' : 'none';
-            if(show) document.getElementById('habit-input').focus();
-        }
-
-        // --- CORE LOGIC ---
+        // --- CORE ---
         function addHabit() {
-            const input = document.getElementById('habit-input');
-            if(!input.value.trim()) return;
+            const val = document.getElementById('habit-input').value.trim();
+            if(!val) return;
 
             state.habits.push({
                 id: Date.now(),
-                name: input.value,
-                doneToday: false,
+                name: val,
                 streak: 0,
-                level: 1
+                doneToday: false,
+                lastDate: null
             });
 
-            input.value = '';
+            document.getElementById('habit-input').value = '';
             toggleModal(false);
+            addXP(20);
             save();
-            renderHabits();
         }
 
         function toggleHabit(id) {
-            const habit = state.habits.find(h => h.id === id);
-            const today = new Date().toISOString().split('T')[0];
-
-            if(!habit.doneToday) {
-                habit.doneToday = true;
-                habit.streak++;
-                state.history[today] = (state.history[today] || 0) + 1;
-                if(navigator.vibrate) navigator.vibrate(20);
+            const h = state.habits.find(x => x.id === id);
+            if(!h.doneToday) {
+                h.doneToday = true;
+                h.streak++;
+                state.totalDone++;
+                addXP(50);
+                if(navigator.vibrate) navigator.vibrate([10, 30, 10]);
             } else {
-                habit.doneToday = false;
-                habit.streak = Math.max(0, habit.streak - 1);
-                state.history[today] = Math.max(0, (state.history[today] || 1) - 1);
+                h.doneToday = false;
+                h.streak = Math.max(0, h.streak - 1);
+                state.totalDone = Math.max(0, state.totalDone - 1);
+                state.xp = Math.max(0, state.xp - 50);
             }
-
             save();
-            renderHabits();
-            updateEnergy();
+        }
+
+        function addXP(amount) {
+            state.xp += amount;
+            // Уровень повышается каждые 500 XP
+            state.level = Math.floor(state.xp / 500) + 1;
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('xp-val').innerText = state.xp;
+            document.getElementById('lvl-val').innerText = state.level;
+            document.getElementById('stat-total-done').innerText = state.totalDone;
+            
+            const progress = ((state.xp % 500) / 500) * 100;
+            document.getElementById('lvl-bar').style.width = progress + '%';
+
+            const rankIdx = Math.min(Math.floor(state.level / 3), ranks.length - 1);
+            document.getElementById('rank-name').innerText = ranks[rankIdx];
+            
+            checkAwards();
         }
 
         function renderHabits() {
-            const list = document.getElementById('habit-list');
-            const empty = document.getElementById('empty-msg');
-            list.innerHTML = '';
-
+            const container = document.getElementById('habit-list');
+            const empty = document.getElementById('empty-state');
+            container.innerHTML = '';
+            
             if(state.habits.length === 0) {
                 empty.style.display = 'block';
                 return;
@@ -406,101 +362,63 @@
             empty.style.display = 'none';
 
             state.habits.forEach(h => {
-                const card = document.createElement('div');
-                card.className = `habit-card ${h.doneToday ? 'completed' : ''}`;
-                card.innerHTML = `
-                    <div class="check-circle" onclick="toggleHabit(${h.id})">
-                        ${h.doneToday ? '<i class="fa-solid fa-check"></i>' : ''}
+                const el = document.createElement('div');
+                el.className = `habit-card ${h.doneToday ? 'done' : ''}`;
+                el.innerHTML = `
+                    <div class="check-btn" onclick="toggleHabit(${h.id})">
+                        <i class="fa-solid ${h.doneToday ? 'fa-check' : 'fa-fingerprint'}"></i>
                     </div>
                     <div class="habit-info">
                         <h3>${h.name}</h3>
-                        <p><i class="fa-solid fa-fire"></i> Серия: ${h.streak} дней</p>
+                        <div class="streak-tag">
+                            <i class="fa-solid fa-fire"></i> СЕРИЯ: ${h.streak} ДН.
+                        </div>
                     </div>
-                    <i class="fa-solid fa-trash" style="opacity: 0.2;" onclick="deleteHabit(${h.id})"></i>
+                    <i class="fa-solid fa-trash" style="opacity: 0.1" onclick="deleteHabit(${h.id})"></i>
                 `;
-                list.appendChild(card);
+                container.appendChild(el);
             });
         }
 
         function deleteHabit(id) {
-            if(confirm('Удалить эту привычку?')) {
-                state.habits = state.habits.filter(h => h.id !== id);
+            if(confirm('Удалить цель?')) {
+                state.habits = state.habits.filter(x => x.id !== id);
                 save();
-                renderHabits();
             }
         }
 
-        // --- VISUALS & ANALYTICS ---
-        function updateEnergy() {
-            const total = state.habits.length;
-            const done = state.habits.filter(h => h.doneToday).length;
-            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-            document.getElementById('energy-pct').innerText = `${pct}%`;
+        function checkAwards() {
+            if(state.habits.length >= 1) document.getElementById('award-1').classList.add('unlocked');
             
-            // Stats view updates
-            document.getElementById('stat-total').innerText = Object.values(state.history).reduce((a, b) => a + b, 0);
-            document.getElementById('stat-streak').innerText = Math.max(...state.habits.map(h => h.streak), 0);
+            const maxStreak = Math.max(...state.habits.map(h => h.streak), 0);
+            if(maxStreak >= 3) document.getElementById('award-2').classList.add('unlocked');
+            if(maxStreak >= 7) document.getElementById('award-3').classList.add('unlocked');
+            if(state.totalDone >= 100) document.getElementById('award-4').classList.add('unlocked');
         }
 
-        function renderHeatmap() {
-            const grid = document.getElementById('heatmap');
-            grid.innerHTML = '';
-            for(let i=0; i<28; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'heat-cell' + (Math.random() > 0.7 ? ' active' : ''); // Mock logic for visual
-                grid.appendChild(cell);
-            }
-        }
-
-        function renderGarden() {
-            const container = document.getElementById('plant-container');
-            container.innerHTML = '';
+        // --- UI UTILS ---
+        function switchView(id, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + id).classList.add('active');
             
-            state.habits.forEach(h => {
-                const height = 20 + (h.streak * 10);
-                const plant = document.createElement('div');
-                plant.className = 'plant';
-                plant.style.width = '30px';
-                plant.style.height = `${Math.min(height, 200)}px`;
-                plant.style.background = `linear-gradient(to top, var(--accent), transparent)`;
-                plant.style.borderRadius = '15px 15px 0 0';
-                plant.style.boxShadow = `0 0 15px var(--accent)`;
-                container.appendChild(plant);
-            });
-        }
-
-        // --- THEMES ---
-        function setTheme(color, el) {
-            state.theme = color;
-            applyTheme(color);
-            document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            save();
+            
+            // Скролл вверх при смене вкладки
+            document.getElementById('scroll-area').scrollTop = 0;
         }
 
-        function applyTheme(color) {
-            document.documentElement.style.setProperty('--primary', color);
-            document.documentElement.style.setProperty('--accent', color);
-            const bg = document.getElementById('dynamic-bg');
-            bg.style.background = `radial-gradient(circle at top right, ${color}, transparent 60%),
-                                  radial-gradient(circle at bottom left, #121217, transparent 50%)`;
+        function toggleModal(show) {
+            document.getElementById('modal').style.display = show ? 'flex' : 'none';
         }
 
-        function updateGreeting() {
-            const hour = new Date().getHours();
-            let g = "Доброй ночи,";
-            if(hour > 5) g = "Доброе утро,";
-            if(hour > 12) g = "Добрый день,";
-            if(hour > 18) g = "Добрый вечер,";
-            document.getElementById('greeting').innerText = g;
+        function save() {
+            localStorage.setItem('aether_asc_v1', JSON.stringify(state));
+            renderHabits();
+            updateUI();
         }
 
-        function resetAll() {
-            if(confirm('Это удалит все данные безвозвратно. Продолжить?')) {
-                localStorage.removeItem('aether_v3');
-                location.reload();
-            }
-        }
+        init();
     </script>
 </body>
 </html>
